@@ -180,29 +180,30 @@ document.getElementById("n4").value = 0.5;
 function draw() {
     const game = document.getElementById("game");
 
-    // 既存のタイルを全削除（背景セルは残す）
-    const oldTiles = document.querySelectorAll(".tile");
-    oldTiles.forEach(t => t.remove());
+    // 既存タイル削除
+    document.querySelectorAll(".tile").forEach(t => t.remove());
 
-    const cellSize = 70;   // 1マスのサイズ
-    const gap = 10;        // マス間の隙間
-    const offset = 10;     // #game の padding と同じ
+    // 背景セルの位置を取得
+    const cells = document.querySelectorAll(".cell");
 
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
+
             const val = grid[r][c];
             if (val === 0) continue;
 
             const tile = document.createElement("div");
-            tile.classList.add("tile");
-            tile.classList.add("tile-" + val);
+            tile.classList.add("tile", "tile-" + val);
             tile.textContent = val;
 
-            const top = offset + r * (cellSize + gap);
-            const left = offset + c * (cellSize + gap);
+            // 対応する背景セルの位置を取得
+            const index = r * size + c;
+            const rect = cells[index].getBoundingClientRect();
+            const gameRect = game.getBoundingClientRect();
 
-            tile.style.top = top + "px";
-            tile.style.left = left + "px";
+            // タイルの位置を背景セルに合わせる
+            tile.style.top = (rect.top - gameRect.top) + "px";
+            tile.style.left = (rect.left - gameRect.left) + "px";
 
             game.appendChild(tile);
         }
