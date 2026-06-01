@@ -259,13 +259,17 @@ function move(dir) {
 }
 
 let startX, startY;
-document.addEventListener("touchstart", e=>{
+const gameElement = document.getElementById("game");
+
+gameElement.addEventListener("touchstart", e=>{
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
 });
-document.addEventListener("touchend", e=>{
+
+gameElement.addEventListener("touchend", e=>{
     let dx = e.changedTouches[0].clientX - startX;
     let dy = e.changedTouches[0].clientY - startY;
+
     if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 30) move("right");
         else if (dx < -30) move("left");
