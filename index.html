@@ -87,26 +87,30 @@
     <div class="row">
         <label>1</label>
         <input type="checkbox" id="fix1">
-        <input type="range" id="p1" min="0" max="100" value="70">
-        <span id="v1">70%</span>
+        <input type="range" id="p1" min="0" max="100" step="0.1">
+        <input type="number" id="n1" min="0" max="100" step="0.1" style="width:60px;">
+        <span>%</span>
     </div>
     <div class="row">
         <label>2</label>
         <input type="checkbox" id="fix2">
-        <input type="range" id="p2" min="0" max="100" value="28">
-        <span id="v2">28%</span>
+        <input type="range" id="p2" min="0" max="100" step="0.1">
+        <input type="number" id="n2" min="0" max="100" step="0.1" style="width:60px;">
+        <span>%</span>
     </div>
     <div class="row">
         <label>3</label>
         <input type="checkbox" id="fix3">
-        <input type="range" id="p3" min="0" max="100" value="1.5">
-        <span id="v3">1.5%</span>
+        <input type="range" id="p3" min="0" max="100" step="0.1">
+        <input type="number" id="n3" min="0" max="100" step="0.1" style="width:60px;">
+        <span>%</span>
     </div>
     <div class="row">
         <label>4</label>
         <input type="checkbox" id="fix4">
-        <input type="range" id="p4" min="0" max="100" value="0.5">
-        <span id="v4">0.5%</span>
+        <input type="range" id="p4" min="0" max="100" step="0.1">
+        <input type="number" id="n4" min="0" max="100" step="0.1" style="width:60px;">
+        <span>%</span>
     </div>
 </div>
 
@@ -120,6 +124,18 @@ function init() {
     addRandom();
     draw();
 }
+
+document.getElementById("p1").value = 70;
+document.getElementById("n1").value = 70;
+
+document.getElementById("p2").value = 28;
+document.getElementById("n2").value = 28;
+
+document.getElementById("p3").value = 1.5;
+document.getElementById("n3").value = 1.5;
+
+document.getElementById("p4").value = 0.5;
+document.getElementById("n4").value = 0.5;
 
 function draw() {
     const game = document.getElementById("game");
@@ -135,47 +151,75 @@ function draw() {
     }
 }
 
-function getProbabilities() {
-    let p1 = parseFloat(document.getElementById("p1").value);
-    let p2 = parseFloat(document.getElementById("p2").value);
-    let p3 = parseFloat(document.getElementById("p3").value);
-    let p4 = parseFloat(document.getElementById("p4").value);
+function updateFromInput(id) {
+    const slider = document.getElementById("p" + id);
+    const number = document.getElementById("n" + id);
 
-    const fix1 = document.getElementById("fix1").checked;
-    const fix2 = document.getElementById("fix2").checked;
-    const fix3 = document.getElementById("fix3").checked;
-    const fix4 = document.getElementById("fix4").checked;
+    let value = parseFloat(number.value);
+    if (isNaN(value)) value = 0;
+    if (value < 0) value = 0;
+    if (value > 100) value = 100;
 
-    let fixedSum = 0;
-    if (fix1) fixedSum += p1;
-    if (fix2) fixedSum += p2;
-    if (fix3) fixedSum += p3;
-    if (fix4) fixedSum += p4;
+    number.value = value;
+    slider.value = value;
 
-    let free = [];
-    if (!fix1) free.push("p1");
-    if (!fix2) free.push("p2");
-    if (!fix3) free.push("p3");
-    if (!fix4) free.push("p4");
-
-    let remain = 100 - fixedSum;
-    if (remain < 0) remain = 0;
-
-    if (free.length > 0) {
-        let each = remain / free.length;
-        free.forEach(id => {
-            document.getElementById(id).value = each;
-        });
-    }
-
-    document.getElementById("v1").textContent = document.getElementById("p1").value + "%";
-    document.getElementById("v2").textContent = document.getElementById("p2").value + "%";
-    document.getElementById("v3").textContent = document.getElementById("p3").value + "%";
-    document.getElementById("v4").textContent = document.getElementById("p4").value + "%";
+    adjustTotal(id);
 }
 
-document.querySelectorAll("#settings input").forEach(el=>{
-    el.addEventListener("input", getProbabilities);
+function updateFromSlider(id) {
+    const slider = document.getElementById("p" + id);
+    const number = document.getElementById("n" + id);
+
+    let value = parseFloat(slider.value);
+    number.value = value;
+
+    adjustTotal(id);
+}
+
+function adjustTotal(changedId) {
+    let values = {
+        1: parseFloat(document.getElementById("p1").value),
+        2: parseFloat(document.getElementById("p2").value),
+        3: parseFloat(document.getElementById("p3").value),
+        4: parseFloat(document.getElementById("p4").value)
+    };
+
+    let fixed = {
+        1: document.getElementById("fix1").checked,
+        2: document.getElementById("fix2").checked,
+        3: document.getElementById("fix3").checked,
+        4: document.getElementById("fix4").checked
+    };
+
+    let total = values[1] + values[2] + values[3] + values[4];
+
+    if (total <= 100) return;
+
+    let excess = total - 100;
+
+    let others = [1,2,3,4].filter(i => i != changedId && !fixed[i]);
+
+    if (others.length === 0) {
+        values[changedId] -= excess;
+        if (values[changedId] < 0) values[changedId] = 0;
+        document.getElementById("p" + changedId).value = values[changedId];
+        document.getElementById("n" + changedId).value = values[changedId];
+        return;
+    }
+
+    let reduceEach = excess / others.length;
+
+    others.forEach(i => {
+        values[i] -= reduceEach;
+        if (values[i] < 0) values[i] = 0;
+        document.getElementById("p" + i).value = values[i];
+        document.getElementById("n" + i).value = values[i];
+    });
+}
+
+["1","2","3","4"].forEach(id=>{
+    document.getElementById("p"+id).addEventListener("input", ()=>updateFromSlider(id));
+    document.getElementById("n"+id).addEventListener("input", ()=>updateFromInput(id));
 });
 
 function addRandom() {
