@@ -264,11 +264,22 @@ const gameElement = document.getElementById("game");
 gameElement.addEventListener("touchstart", e=>{
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-});
+
+    // 盤面上のスワイプはスクロールを止める
+    e.preventDefault();
+}, { passive: false });
+
+gameElement.addEventListener("touchmove", e=>{
+    // スワイプ中もスクロールを止める
+    e.preventDefault();
+}, { passive: false });
 
 gameElement.addEventListener("touchend", e=>{
     let dx = e.changedTouches[0].clientX - startX;
     let dy = e.changedTouches[0].clientY - startY;
+
+    // 盤面上のスワイプはスクロールを止める
+    e.preventDefault();
 
     if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 30) move("right");
@@ -277,14 +288,7 @@ gameElement.addEventListener("touchend", e=>{
         if (dy > 30) move("down");
         else if (dy < -30) move("up");
     }
-});
-
-document.addEventListener("keydown", e=>{
-    if (e.key === "ArrowLeft") move("left");
-    if (e.key === "ArrowRight") move("right");
-    if (e.key === "ArrowUp") move("up");
-    if (e.key === "ArrowDown") move("down");
-});
+}, { passive: false });
 
 function resetGame() {
     init();
