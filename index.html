@@ -32,25 +32,51 @@
         height: 70px;
         background: #cdc1b4;
         border-radius: 4px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 28px;
-        font-weight: bold;
-        color: #776e65;
     }
-    .n0 { background: #cdc1b4; }
-    .n1 { background: #eee4da; }
-    .n2 { background: #ede0c8; }
-    .n3 { background: #f2b179; color: #f9f6f2; }
-    .n4 { background: #f59563; color: #f9f6f2; }
-    .n5 { background: #f67c5f; color: #f9f6f2; }
-    .n6 { background: #f65e3b; color: #f9f6f2; }
-    .n7 { background: #edcf72; }
-    .n8 { background: #edcc61; }
-    .n9 { background: #edc850; }
-    .n10 { background: #edc53f; }
-    .n11 { background: #edc22e; }
+    .tile {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+    transition: top 0.15s ease, left 0.15s ease;
+}
+
+.tile-1 { background: #eee4da; color: #776e65; }
+.tile-2 { background: #ede0c8; color: #776e65; }
+.tile-3 { background: #f2b179; }
+.tile-4 { background: #f59563; }
+.tile-5 { background: #f67c5f; }
+.tile-6 { background: #f65e3b; }
+.tile-7 { background: #edcf72; }
+.tile-8 { background: #edcc61; }
+.tile-9 { background: #edc850; }
+.tile-10 { background: #edc53f; }
+.tile-11 { background: #edc22e; }
+
+.tile-merge {
+    animation: mergePop 0.2s ease;
+}
+
+@keyframes mergePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+.tile-new {
+    animation: popIn 0.2s ease;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
 
     #settings {
         width: 90%;
@@ -118,8 +144,22 @@
 let grid = [];
 const size = 4;
 
+function initCells() {
+    const game = document.getElementById("game");
+    game.innerHTML = "";
+    // #game をアニメーション用に relative にしておく
+    game.style.position = "relative";
+
+    for (let i = 0; i < size * size; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        game.appendChild(cell);
+    }
+}
+
 function init() {
     grid = Array(size).fill(0).map(()=>Array(size).fill(0));
+    initCells();      // ← ここを追加
     addRandom();
     addRandom();
     draw();
@@ -139,14 +179,32 @@ document.getElementById("n4").value = 0.5;
 
 function draw() {
     const game = document.getElementById("game");
-    game.innerHTML = "";
-    for (let r=0; r<size; r++) {
-        for (let c=0; c<size; c++) {
-            const v = grid[r][c];
-            const cell = document.createElement("div");
-            cell.className = "cell n" + v;
-            cell.textContent = v === 0 ? "" : v;
-            game.appendChild(cell);
+
+    // 既存のタイルを全削除（背景セルは残す）
+    const oldTiles = document.querySelectorAll(".tile");
+    oldTiles.forEach(t => t.remove());
+
+    const cellSize = 70;   // 1マスのサイズ
+    const gap = 10;        // マス間の隙間
+    const offset = 10;     // #game の padding と同じ
+
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            const val = grid[r][c];
+            if (val === 0) continue;
+
+            const tile = document.createElement("div");
+            tile.classList.add("tile");
+            tile.classList.add("tile-" + val);
+            tile.textContent = val;
+
+            const top = offset + r * (cellSize + gap);
+            const left = offset + c * (cellSize + gap);
+
+            tile.style.top = top + "px";
+            tile.style.left = left + "px";
+
+            game.appendChild(tile);
         }
     }
 }
