@@ -604,11 +604,12 @@ function undo() {
 }
 
 function replay() {
-    function replay() {
     if (currentMode !== 2) return;
     if (history.length === 0) return;
 
-    document.getElementById("replayControls").style.display = "block";
+    // ★ リプレイ開始時にコントロールを表示
+    const rc = document.getElementById("replayControls");
+    rc.style.display = "block";
     document.getElementById("pauseBtn").style.display = "inline-block";
     document.getElementById("stepBackBtn").style.display = "none";
     document.getElementById("resumeBtn").style.display = "none";
@@ -639,7 +640,7 @@ function replay() {
         if (replayIndex >= history.length) {
             clearInterval(replayInterval);
         }
-    }, 300); // ← 速度調整（後述）
+    }, 300);
 }
 
 function pauseReplay() {
@@ -671,7 +672,7 @@ function updateModeUI() {
     } else {
         undoBtn.style.display = "none";
         replayBtn.style.display = "none";
-        replayControls.style.display = "none"; // ← これでOK
+        replayControls.style.display = "none"; // ← これが正しい
     }
 }
 
