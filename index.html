@@ -345,6 +345,18 @@ function slideRow(rowTiles) {
     return result;
 }
 
+function tilesChanged(oldTiles, newTiles) {
+    if (oldTiles.length !== newTiles.length) return true;
+
+    for (let i = 0; i < oldTiles.length; i++) {
+        const o = oldTiles[i];
+        const n = newTiles.find(t => t.id === o.id);
+        if (!n) return true;
+        if (o.r !== n.r || o.c !== n.c) return true;
+    }
+    return false;
+}
+
 function move(dir) {
     const oldTiles = JSON.parse(JSON.stringify(tiles)); // deep copy
 
@@ -407,7 +419,7 @@ function move(dir) {
     }
 
     // 変化なしなら終了
-    if (JSON.stringify(oldTiles) === JSON.stringify(tiles)) return;
+    if (!tilesChanged(oldTiles, tiles)) return;
 
     animateTiles(oldTiles, tiles);
 
@@ -422,47 +434,55 @@ function animateTiles(oldTiles, newTiles) {
     const cells = document.querySelectorAll(".cell");
     const gameRect = game.getBoundingClientRect();
 
+    // 1. oldTiles を動かす（合成タイルはまだ生成しない）
     oldTiles.forEach(oldT => {
         const tileEl = document.querySelector(`.tile[data-id="${oldT.id}"]`);
         if (!tileEl) return;
 
         const newT = newTiles.find(t => t.id === oldT.id);
 
-        // 合成で消えるタイル
+        // 合成で消えるタイル（mergedFrom に含まれる）
         if (!newT) {
-            tileEl.remove();
+            // アニメーション後に消すためにクラス付与
+            tileEl.classList.add("tile-remove");
             return;
         }
 
+        // 移動先の位置へアニメーション
         const index = newT.r * size + newT.c;
         const rect = cells[index].getBoundingClientRect();
 
         tileEl.style.top = (rect.top - gameRect.top) + "px";
         tileEl.style.left = (rect.left - gameRect.left) + "px";
-
-        // 合成タイル
-        if (newT.mergedFrom && newT.mergedFrom.includes(oldT.id)) {
-            tileEl.classList.add("tile-merge");
-        }
     });
 
-    // 合成後に新しいタイルを生成
-    newTiles.forEach(t => {
-        if (t.mergedFrom) {
-            const tile = document.createElement("div");
-            tile.classList.add("tile", "tile-" + t.value, "tile-merge");
-            tile.textContent = t.value;
-            tile.dataset.id = t.id;
+    // 2. アニメーション終了後に合成タイルを生成
+    setTimeout(() => {
+        // 合成タイル生成
+        newTiles.forEach(t => {
+            if (t.mergedFrom) {
+                const tile = document.createElement("div");
+                tile.classList.add("tile", "tile-" + t.value, "tile-merge");
+                tile.textContent = t.value;
+                tile.dataset.id = t.id;
 
-            const index = t.r * size + t.c;
-            const rect = cells[index].getBoundingClientRect();
+                const index = t.r * size + t.c;
+                const rect = cells[index].getBoundingClientRect();
 
-            tile.style.top = (rect.top - gameRect.top) + "px";
-            tile.style.left = (rect.left - gameRect.left) + "px";
+                tile.style.top = (rect.top - gameRect.top) + "px";
+                tile.style.left = (rect.left - gameRect.left) + "px";
 
-            game.appendChild(tile);
-        }
-    });
+                game.appendChild(tile);
+            }
+        });
+
+        // 消えるタイルを削除
+        document.querySelectorAll(".tile-remove").forEach(t => t.remove());
+
+        // 最終描画
+        draw();
+
+    }, 160); // transition と同じ時間
 }
 
 let startX, startY;
