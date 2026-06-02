@@ -322,42 +322,132 @@ function slide(row) {
 }
 
 function move(dir) {
-    let moved = false;
-    let old = JSON.stringify(grid);
+    const before = JSON.stringify(grid);
+
+    // 1. 移動後の盤面を計算（仮の newGrid を作る）
+    let newGrid = JSON.parse(JSON.stringify(grid));
 
     if (dir === "left") {
-        for (let r=0; r<size; r++) {
-            let newRow = slide(grid[r]);
-            grid[r] = newRow;
+        for (let r = 0; r < size; r++) {
+            newGrid[r] = slide(newGrid[r]);
         }
     }
     if (dir === "right") {
-        for (let r=0; r<size; r++) {
-            let row = grid[r].slice().reverse();
+        for (let r = 0; r < size; r++) {
+            let row = newGrid[r].slice().reverse();
             row = slide(row);
-            grid[r] = row.reverse();
+            newGrid[r] = row.reverse();
         }
     }
     if (dir === "up") {
-        for (let c=0; c<size; c++) {
+        for (let c = 0; c < size; c++) {
             let col = [];
-            for (let r=0; r<size; r++) col.push(grid[r][c]);
+            for (let r = 0; r < size; r++) col.push(newGrid[r][c]);
             col = slide(col);
-            for (let r=0; r<size; r++) grid[r][c] = col[r];
+            for (let r = 0; r < size; r++) newGrid[r][c] = col[r];
         }
     }
     if (dir === "down") {
-        for (let c=0; c<size; c++) {
+        for (let c = 0; c < size; c++) {
             let col = [];
-            for (let r=0; r<size; r++) col.push(grid[r][c]);
+            for (let r = 0; r < size; r++) col.push(newGrid[r][c]);
             col = slide(col.reverse()).reverse();
-            for (let r=0; r<size; r++) grid[r][c] = col[r];
+            for (let r = 0; r < size; r++) newGrid[r][c] = col[r];
         }
     }
 
-    if (JSON.stringify(grid) !== old) {
+    // 変化なしなら何もしない
+    if (JSON.stringify(newGrid) === before) return;
+
+    // 2. タイルをアニメーションで動かす
+    animateTiles(grid, newGrid, dir);
+
+    // 3. アニメーション終了後に盤面を更新
+    setTimeout(() => {
+        grid = newGrid;
         addRandom();
         draw();
+    }, 160); // transition と同じ時間
+}
+
+function animateTiles(oldGrid, newGrid, dir) {
+    const game = document.getElementById("game");
+    const cells = document.querySelectorAll(".cell");
+
+    // 現在のタイルを取得（位置を動かすため）
+    const tiles = document.querySelectorAll(".tile");
+
+    // タイルの現在位置を記録
+    let tileMap = {}; // "r,c" → tileElement
+    tiles.forEach(tile => {
+        const val = parseInt(tile.textContent);
+        // 現在の位置を oldGrid から探す
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (oldGrid[r][c] === val && !tileMap[`${r},${c}`]) {
+                    tileMap[`${r},${c}`] = tile;
+                    return;
+                }
+            }
+        }
+    });
+
+    // 移動後の位置にタイルを移動させる
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+
+            const newVal = newGrid[r][c];
+            if (newVal === 0) continue;
+
+            // oldGrid から newGrid への移動元を探す
+            let from = null;
+
+            // 同じ値のタイルを oldGrid から探す
+            for (let rr = 0; rr < size; rr++) {
+                for (let cc = 0; cc < size; cc++) {
+                    if (oldGrid[rr][cc] === newVal && tileMap[`${rr},${cc}`]) {
+                        from = { r: rr, c: cc };
+                        break;
+                    }
+                }
+                if (from) break;
+            }
+
+            // 合成タイルの場合（oldGrid に同じ値が2つある）
+            if (!from) {
+                // 合成されたタイルは newGrid の位置に新規生成して merge アニメーション
+                const tile = document.createElement("div");
+                tile.classList.add("tile", "tile-" + newVal, "tile-merge");
+                tile.textContent = newVal;
+
+                const rect = cells[r * size + c].getBoundingClientRect();
+                const gameRect = game.getBoundingClientRect();
+
+                tile.style.top = (rect.top - gameRect.top) + "px";
+                tile.style.left = (rect.left - gameRect.left) + "px";
+
+                game.appendChild(tile);
+                continue;
+            }
+
+            // 移動元タイルを取得
+            const tile = tileMap[`${from.r},${from.c}`];
+
+            // 移動先の座標を取得
+            const rect = cells[r * size + c].getBoundingClientRect();
+            const gameRect = game.getBoundingClientRect();
+
+            tile.style.top = (rect.top - gameRect.top) + "px";
+            tile.style.left = (rect.left - gameRect.left) + "px";
+
+            // 移動後に合成される場合
+            if (newVal !== oldGrid[from.r][from.c]) {
+                tile.classList.add("tile-merge");
+            }
+
+            // このタイルは使ったので削除
+            delete tileMap[`${from.r},${from.c}`];
+        }
     }
 }
 
