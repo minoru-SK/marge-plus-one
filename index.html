@@ -105,6 +105,16 @@
     margin: 4px;
 }
 
+#replayControls {
+    display: none;
+}
+
+#pauseBtn, #stepBackBtn, #resumeBtn, #stepForwardBtn {
+    font-size: 24px;
+    padding: 8px 16px;
+    margin: 4px;
+}
+
 </style>
 </head>
 <body>
@@ -118,6 +128,13 @@
 </div>
 
 <h1>Merge+1 4×4</h1>
+
+<div id="replayControls" style="text-align:center; margin:10px 0;">
+    <button id="pauseBtn" onclick="pauseReplay()">一時停止</button>
+    <button id="stepBackBtn" onclick="stepBack()">戻る</button>
+    <button id="resumeBtn" onclick="resumeReplay()">再生</button>
+    <button id="stepForwardBtn" onclick="stepForward()">進む</button>
+</div>
 
 <div id="game"></div>
 
@@ -583,6 +600,12 @@ function undo() {
 }
 
 function replay() {
+    document.getElementById("replayControls").style.display = "block";
+    document.getElementById("pauseBtn").style.display = "inline-block";
+    document.getElementById("stepBackBtn").style.display = "none";
+    document.getElementById("resumeBtn").style.display = "none";
+    document.getElementById("stepForwardBtn").style.display = "none";
+
     if (currentMode !== 2) return;
     if (history.length === 0) return;
 
@@ -605,6 +628,24 @@ function replay() {
         i++;
         if (i >= history.length) clearInterval(interval);
     }, 300);
+}
+
+function pauseReplay() {
+    isPaused = true;
+
+    document.getElementById("pauseBtn").style.display = "none";
+    document.getElementById("stepBackBtn").style.display = "inline-block";
+    document.getElementById("resumeBtn").style.display = "inline-block";
+    document.getElementById("stepForwardBtn").style.display = "inline-block";
+}
+
+function resumeReplay() {
+    isPaused = false;
+
+    document.getElementById("pauseBtn").style.display = "inline-block";
+    document.getElementById("stepBackBtn").style.display = "none";
+    document.getElementById("resumeBtn").style.display = "none";
+    document.getElementById("stepForwardBtn").style.display = "none";
 }
 
 function updateModeUI() {
