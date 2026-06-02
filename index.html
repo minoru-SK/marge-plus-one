@@ -434,22 +434,38 @@ function animateTiles(oldTiles, newTiles) {
     const cells = document.querySelectorAll(".cell");
     const gameRect = game.getBoundingClientRect();
 
-    // 1. oldTiles を動かす（合成タイルはまだ生成しない）
+    // 合成後のタイルの位置をマップ化（id → {r,c}）
+    const mergedTargets = {};
+    newTiles.forEach(t => {
+        if (t.mergedFrom) {
+            const pos = { r: t.r, c: t.c };
+            t.mergedFrom.forEach(id => {
+                mergedTargets[id] = pos;
+            });
+        }
+    });
+
+    // 1. oldTiles を動かす
     oldTiles.forEach(oldT => {
         const tileEl = document.querySelector(`.tile[data-id="${oldT.id}"]`);
         if (!tileEl) return;
 
         const newT = newTiles.find(t => t.id === oldT.id);
 
-        // 合成で消えるタイル（mergedFrom に含まれる）
-        if (!newT) {
-            // アニメーション後に消すためにクラス付与
+        let targetPos;
+
+        if (newT) {
+            // 通常の移動
+            targetPos = { r: newT.r, c: newT.c };
+        } else if (mergedTargets[oldT.id]) {
+            // 合成に使われるタイル → 合成先へ移動
+            targetPos = mergedTargets[oldT.id];
             tileEl.classList.add("tile-remove");
+        } else {
             return;
         }
 
-        // 移動先の位置へアニメーション
-        const index = newT.r * size + newT.c;
+        const index = targetPos.r * size + targetPos.c;
         const rect = cells[index].getBoundingClientRect();
 
         tileEl.style.top = (rect.top - gameRect.top) + "px";
@@ -458,7 +474,6 @@ function animateTiles(oldTiles, newTiles) {
 
     // 2. アニメーション終了後に合成タイルを生成
     setTimeout(() => {
-        // 合成タイル生成
         newTiles.forEach(t => {
             if (t.mergedFrom) {
                 const tile = document.createElement("div");
@@ -476,13 +491,11 @@ function animateTiles(oldTiles, newTiles) {
             }
         });
 
-        // 消えるタイルを削除
+        // 合成に使われたタイルを削除
         document.querySelectorAll(".tile-remove").forEach(t => t.remove());
 
-        // 最終描画
         draw();
-
-    }, 160); // transition と同じ時間
+    }, 160);
 }
 
 let startX, startY;
