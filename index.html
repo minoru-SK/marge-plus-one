@@ -121,9 +121,9 @@
 
 <div id="game"></div>
 
-<button id="undoBtn" onclick="undo()">Undo</button>
-<button id="replayBtn" onclick="replay()">Replay</button>
-<button id="resetBtn" onclick="resetGame()">Reset</button>
+<button id="undoBtn" onclick="undo()">一手戻す</button>
+<button id="replayBtn" onclick="replay()">リプレイ</button>
+<button id="resetBtn" onclick="resetGame()">リセット</button>
 
 <h2>出現確率設定</h2>
 <div id="settings">
@@ -604,7 +604,7 @@ function replay() {
 
         i++;
         if (i >= history.length) clearInterval(interval);
-    }, 200);
+    }, 300);
 }
 
 function updateModeUI() {
@@ -619,6 +619,11 @@ function updateModeUI() {
         replayBtn.style.display = "none";
     }
 }
+
+window.addEventListener("load", () => {
+    document.getElementById("modeSelect").value = currentMode;
+    updateModeUI();
+});
 
 updateModeUI();
 
