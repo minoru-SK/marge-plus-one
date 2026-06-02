@@ -111,13 +111,12 @@
     </select>
 </div>
 
-<button onclick="undo()">Undo</button>
-<button onclick="replay()">Replay</button>
-
 <h1>Merge+1 4×4</h1>
 
 <div id="game"></div>
 
+<button id="undoBtn" onclick="undo()">Undo</button>
+<button id="replayBtn" onclick="replay()">Replay</button>
 <button onclick="resetGame()">リセット</button>
 
 <h2>出現確率設定</h2>
@@ -158,7 +157,8 @@ let historyIndex = -1;
 let currentMode = 1;
 document.getElementById("modeSelect").addEventListener("change", e => {
     currentMode = Number(e.target.value);
-    resetGame(); // モード切替時にリセット
+    updateModeUI();
+    resetGame();
 });
 
 let tiles = []; // { id, value, r, c }
@@ -584,6 +584,21 @@ function replay() {
         if (i >= history.length) clearInterval(interval);
     }, 200);
 }
+
+function updateModeUI() {
+    const undoBtn = document.getElementById("undoBtn");
+    const replayBtn = document.getElementById("replayBtn");
+
+    if (currentMode === 2) {
+        undoBtn.style.display = "inline-block";
+        replayBtn.style.display = "inline-block";
+    } else {
+        undoBtn.style.display = "none";
+        replayBtn.style.display = "none";
+    }
+}
+
+updateModeUI();
 
 </script>
 
