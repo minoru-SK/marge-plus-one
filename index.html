@@ -604,8 +604,16 @@ function undo() {
 }
 
 function replay() {
+    function replay() {
     if (currentMode !== 2) return;
     if (history.length === 0) return;
+
+    // ★ リプレイ開始時にコントロールを表示
+    document.getElementById("replayControls").style.display = "block";
+    document.getElementById("pauseBtn").style.display = "inline-block";
+    document.getElementById("stepBackBtn").style.display = "none";
+    document.getElementById("resumeBtn").style.display = "none";
+    document.getElementById("stepForwardBtn").style.display = "none";
 
     replayIndex = 0;
     isPaused = false;
@@ -656,6 +664,7 @@ function resumeReplay() {
 function updateModeUI() {
     const undoBtn = document.getElementById("undoBtn");
     const replayBtn = document.getElementById("replayBtn");
+    const replayControls = document.getElementById("replayControls");
 
     if (currentMode === 2) {
         undoBtn.style.display = "inline-block";
@@ -663,8 +672,10 @@ function updateModeUI() {
     } else {
         undoBtn.style.display = "none";
         replayBtn.style.display = "none";
+        replayControls.style.display = "none"; 
     }
 }
+
 
 window.addEventListener("load", () => {
     document.getElementById("modeSelect").value = currentMode;
