@@ -406,7 +406,8 @@ function tilesChanged(oldTiles, newTiles) {
 
 function move(dir) {
     const oldTiles = JSON.parse(JSON.stringify(tiles)); // deep copy
-
+    if (replayInterval !== null && !isPaused) return;
+    
     if (dir === "left") {
         for (let r = 0; r < size; r++) {
             // 左方向：列を昇順（0→3）に並べる
@@ -641,6 +642,11 @@ function replay() {
             clearInterval(replayInterval);
         }
     }, 300);
+
+        if (replayIndex >= history.length) {
+        clearInterval(replayInterval);
+        replayInterval = null; // ★ これで move() が再び有効になる
+    }
 }
 
 function pauseReplay() {
@@ -659,6 +665,28 @@ function resumeReplay() {
     document.getElementById("stepBackBtn").style.display = "none";
     document.getElementById("resumeBtn").style.display = "none";
     document.getElementById("stepForwardBtn").style.display = "none";
+}
+
+function stepBack() {
+    if (replayIndex <= 0) return;
+
+    const oldTiles = JSON.parse(JSON.stringify(history[replayIndex]));
+    replayIndex--;
+    const newTiles = JSON.parse(JSON.stringify(history[replayIndex]));
+
+    tiles = JSON.parse(JSON.stringify(newTiles));
+    animateTiles(oldTiles, newTiles);
+}
+
+function stepForward() {
+    if (replayIndex >= history.length - 1) return;
+
+    const oldTiles = JSON.parse(JSON.stringify(history[replayIndex]));
+    replayIndex++;
+    const newTiles = JSON.parse(JSON.stringify(history[replayIndex]));
+
+    tiles = JSON.parse(JSON.stringify(newTiles));
+    animateTiles(oldTiles, newTiles);
 }
 
 function updateModeUI() {
