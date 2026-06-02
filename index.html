@@ -672,10 +672,9 @@ function updateModeUI() {
     } else {
         undoBtn.style.display = "none";
         replayBtn.style.display = "none";
-        replayControls.style.display = "none"; 
+        replayControls.style.display = "none"; // ← これでOK
     }
 }
-
 
 window.addEventListener("load", () => {
     document.getElementById("modeSelect").value = currentMode;
