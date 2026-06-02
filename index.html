@@ -98,9 +98,21 @@
         flex: 1;
         margin: 0 10px;
     }
+
+<button onclick="undo()">Undo</button>
+<button onclick="replay()">Replay</button>
+
 </style>
 </head>
 <body>
+
+<div style="margin: 10px 0;">
+    <label>モード：</label>
+    <select id="modeSelect">
+        <option value="1">モード1（通常）</option>
+        <option value="2">モード2（Undo/リプレイ）</option>
+    </select>
+</div>
 
 <h1>Merge+1 4×4</h1>
 
@@ -141,6 +153,14 @@
 </div>
 
 <script>
+let history = []; // { tiles: deepCopy, score: number }
+let historyIndex = -1;
+let currentMode = 1;
+document.getElementById("modeSelect").addEventListener("change", e => {
+    currentMode = Number(e.target.value);
+    resetGame(); // モード切替時にリセット
+});
+
 let tiles = []; // { id, value, r, c }
 let nextId = 1;
 const size = 4;
@@ -421,6 +441,13 @@ function move(dir) {
     // 変化なしなら終了
     if (!tilesChanged(oldTiles, tiles)) return;
 
+    if (currentMode === 2) {
+    // 履歴を追加
+    history.push(JSON.parse(JSON.stringify(tiles)));
+    historyIndex = history.length - 1;
+}
+
+
     animateTiles(oldTiles, tiles);
 
     setTimeout(() => {
@@ -535,6 +562,29 @@ function resetGame() {
 }
 
 init();
+
+function undo() {
+    if (currentMode !== 2) return;
+    if (historyIndex <= 0) return;
+
+    historyIndex--;
+    tiles = JSON.parse(JSON.stringify(history[historyIndex]));
+    draw();
+}
+
+function replay() {
+    if (currentMode !== 2) return;
+    if (history.length === 0) return;
+
+    let i = 0;
+    const interval = setInterval(() => {
+        tiles = JSON.parse(JSON.stringify(history[i]));
+        draw();
+        i++;
+        if (i >= history.length) clearInterval(interval);
+    }, 200);
+}
+
 </script>
 
 </body>
