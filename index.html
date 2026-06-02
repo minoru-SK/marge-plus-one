@@ -184,6 +184,10 @@ document.getElementById("modeSelect").addEventListener("change", e => {
     resetGame();
 });
 
+let replayInterval = null;
+let replayIndex = 0;
+let isPaused = false;
+
 let tiles = []; // { id, value, r, c }
 let nextId = 1;
 const size = 4;
@@ -600,34 +604,35 @@ function undo() {
 }
 
 function replay() {
-    document.getElementById("replayControls").style.display = "block";
-    document.getElementById("pauseBtn").style.display = "inline-block";
-    document.getElementById("stepBackBtn").style.display = "none";
-    document.getElementById("resumeBtn").style.display = "none";
-    document.getElementById("stepForwardBtn").style.display = "none";
-
     if (currentMode !== 2) return;
     if (history.length === 0) return;
 
-    let i = 0;
+    replayIndex = 0;
+    isPaused = false;
 
-    const interval = setInterval(() => {
-        if (i === 0) {
+    clearInterval(replayInterval);
+
+    replayInterval = setInterval(() => {
+        if (isPaused) return;
+
+        if (replayIndex === 0) {
             tiles = JSON.parse(JSON.stringify(history[0]));
             draw();
-            i++;
+            replayIndex++;
             return;
         }
 
-        const oldTiles = JSON.parse(JSON.stringify(history[i - 1]));
-        const newTiles = JSON.parse(JSON.stringify(history[i]));
+        const oldTiles = JSON.parse(JSON.stringify(history[replayIndex - 1]));
+        const newTiles = JSON.parse(JSON.stringify(history[replayIndex]));
 
         tiles = JSON.parse(JSON.stringify(newTiles));
         animateTiles(oldTiles, newTiles);
 
-        i++;
-        if (i >= history.length) clearInterval(interval);
-    }, 300);
+        replayIndex++;
+        if (replayIndex >= history.length) {
+            clearInterval(replayInterval);
+        }
+    }, 300); // ← 速度調整（後述）
 }
 
 function pauseReplay() {
