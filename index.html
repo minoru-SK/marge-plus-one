@@ -99,6 +99,12 @@
         margin: 0 10px;
     }
 
+#undoBtn, #replayBtn, #resetBtn {
+    font-size: 24px;
+    padding: 8px 16px;
+    margin: 4px;
+}
+
 </style>
 </head>
 <body>
@@ -117,7 +123,7 @@
 
 <button id="undoBtn" onclick="undo()">Undo</button>
 <button id="replayBtn" onclick="replay()">Replay</button>
-<button onclick="resetGame()">リセット</button>
+<button id="resetBtn" onclick="resetGame()">Reset</button>
 
 <h2>出現確率設定</h2>
 <div id="settings">
@@ -442,11 +448,15 @@ function move(dir) {
     if (!tilesChanged(oldTiles, tiles)) return;
 
     if (currentMode === 2) {
-    // 履歴を追加
+    // Undo後に新しい手を打った場合、未来の履歴を削除
+    if (historyIndex < history.length - 1) {
+        history = history.slice(0, historyIndex + 1);
+    }
+
+    // 現在の盤面を履歴に追加
     history.push(JSON.parse(JSON.stringify(tiles)));
     historyIndex = history.length - 1;
 }
-
 
     animateTiles(oldTiles, tiles);
 
@@ -577,9 +587,21 @@ function replay() {
     if (history.length === 0) return;
 
     let i = 0;
+
     const interval = setInterval(() => {
-        tiles = JSON.parse(JSON.stringify(history[i]));
-        draw();
+        if (i === 0) {
+            tiles = JSON.parse(JSON.stringify(history[0]));
+            draw();
+            i++;
+            return;
+        }
+
+        const oldTiles = JSON.parse(JSON.stringify(history[i - 1]));
+        const newTiles = JSON.parse(JSON.stringify(history[i]));
+
+        tiles = JSON.parse(JSON.stringify(newTiles));
+        animateTiles(oldTiles, newTiles);
+
         i++;
         if (i >= history.length) clearInterval(interval);
     }, 200);
