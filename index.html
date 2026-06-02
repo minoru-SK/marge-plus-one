@@ -406,7 +406,7 @@ function tilesChanged(oldTiles, newTiles) {
 
 function move(dir) {
     const oldTiles = JSON.parse(JSON.stringify(tiles)); // deep copy
-    if (replayInterval !== null && !isPaused) return;
+    if (replayInterval !== null) return;
     
     if (dir === "left") {
         for (let r = 0; r < size; r++) {
